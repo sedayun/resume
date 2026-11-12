@@ -1,55 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <style>
-        html, body { margin: 0; padding: 0; height: 100%; }
-    </style>
+    <meta charset="utf-8">
+    <title>지도 타입 바꾸기2</title>
+    
 </head>
 <body>
-    <!-- 지도를 표시할 div 입니다 -->
-<div id="map" style="width:100%;height:100vh;"></div>
+<div id="map" style="width:100%;height:350px;"></div>
+<p>
+    <input type="checkbox" id="chkUseDistrict" onclick="setOverlayMapTypeId()" /> 지적편집도 정보 보기
+    <input type="checkbox" id="chkTerrain" onclick="setOverlayMapTypeId()" /> 지형정보 보기 
+    <input type="checkbox" id="chkTraffic" onclick="setOverlayMapTypeId()" /> 교통정보 보기       
+    <input type="checkbox" id="chkBicycle" onclick="setOverlayMapTypeId()" /> 자전거도로 정보 보기
+</p>
 
-<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e21559fa27072af635c69adf895294e4"></script>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=5248eec0a8d9ce2bf219062d780be082"></script>
 <script>
-const LAT = 35.1468209;
-const LNG = 129.0112424;
 var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
     mapOption = { 
-        center: new kakao.maps.LatLng(LAT, LNG), // 지도의 중심좌표
-        level: 3 // 지도의 확대 레벨
+        center: new kakao.maps.LatLng(37.57319, 126.96658), // 지도의 중심좌표
+        level: 7 // 지도의 확대 레벨
     };
 
-// 지도를 표시할 div와  지도 옵션으로  지도를 생성합니다
-var map = new kakao.maps.Map(mapContainer, mapOption); 
-// 마커가 표시될 위치입니다 
-var markerPosition  = new kakao.maps.LatLng(LAT, LNG); 
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
 
-// 마커를 생성합니다
-var marker = new kakao.maps.Marker({
-    position: markerPosition
-});
+// 지도 타입 정보를 가지고 있을 객체입니다
+// map.addOverlayMapTypeId 함수로 추가된 지도 타입은
+// 가장 나중에 추가된 지도 타입이 가장 앞에 표시됩니다
+// 이 예제에서는 지도 타입을 추가할 때 지적편집도, 지형정보, 교통정보, 자전거도로 정보 순으로 추가하므로
+// 자전거 도로 정보가 가장 앞에 표시됩니다
+var mapTypes = {
+    terrain : kakao.maps.MapTypeId.TERRAIN,    
+    traffic :  kakao.maps.MapTypeId.TRAFFIC,
+    bicycle : kakao.maps.MapTypeId.BICYCLE,
+    useDistrict : kakao.maps.MapTypeId.USE_DISTRICT
+};
 
-// 마커가 지도 위에 표시되도록 설정합니다
-marker.setMap(map);
+// 체크 박스를 선택하면 호출되는 함수입니다
+function setOverlayMapTypeId() {
+    var chkTerrain = document.getElementById('chkTerrain'),  
+        chkTraffic = document.getElementById('chkTraffic'),
+        chkBicycle = document.getElementById('chkBicycle'),
+        chkUseDistrict = document.getElementById('chkUseDistrict');
+    
+    // 지도 타입을 제거합니다
+    for (var type in mapTypes) {
+        map.removeOverlayMapTypeId(mapTypes[type]);    
+    }
 
-// 마커를 클릭했을 때 마커 위에 표시할 인포윈도우를 생성합니다
-var iwContent = '<div style="padding:5px;"><a href="https://www.kit.ac.kr/" target="_blank">https://www.kit.ac.kr/</a></div>', // 인포윈도우에 표출될 내용으로 HTML 문자열이나 document element가 가능합니다
-    iwRemoveable = true; // removeable 속성을 true 로 설정하면 인포윈도우를 닫을 수 있는 x버튼이 표시됩니다
-
-// 인포윈도우를 생성합니다
-var infowindow = new kakao.maps.InfoWindow({
-    content : iwContent,
-    removable : iwRemoveable
-});
-
-// 마커에 클릭이벤트를 등록합니다
-kakao.maps.event.addListener(marker, 'click', function() {
-      // 마커 위에 인포윈도우를 표시합니다
-      infowindow.open(map, marker);
-});
+    // 지적편집도정보 체크박스가 체크되어있으면 지도에 지적편집도정보 지도타입을 추가합니다
+    if (chkUseDistrict.checked) {
+        map.addOverlayMapTypeId(mapTypes.useDistrict);    
+    }
+    
+    // 지형정보 체크박스가 체크되어있으면 지도에 지형정보 지도타입을 추가합니다
+    if (chkTerrain.checked) {
+        map.addOverlayMapTypeId(mapTypes.terrain);    
+    }
+    
+    // 교통정보 체크박스가 체크되어있으면 지도에 교통정보 지도타입을 추가합니다
+    if (chkTraffic.checked) {
+        map.addOverlayMapTypeId(mapTypes.traffic);    
+    }
+    
+    // 자전거도로정보 체크박스가 체크되어있으면 지도에 자전거도로정보 지도타입을 추가합니다
+    if (chkBicycle.checked) {
+        map.addOverlayMapTypeId(mapTypes.bicycle);    
+    }
+    
+}  
 </script>
 </body>
 </html>
