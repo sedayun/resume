@@ -1,83 +1,74 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FUNNYCOM</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <link rel="stylesheet" href="./style.css">
+    <meta charset="utf-8">
+    <title>지도 타입 바꾸기2</title>
+    
 </head>
 <body>
-  <div id="container">
-    <header>
-      <!-- 이름을 가장 위쪽에 -->
-      <h1>funnycom 줴ㅜ제ㅣ야 </h1>
-      <h2>Frontend Developer______소속</h2>
-    </header>
-    <!-- 내용 -->
-    <main>
-      <!-- 화면을 좌우로 나눔 -->
-      <article id="left">
-        <div id="pf-img">
-          <img src="./pf.png" alt="프로필 이미지">
-        </div>
+<div id="map" style="width:100%;height:350px;"></div>
+<p>
+    <input type="checkbox" id="chkUseDistrict" onclick="setOverlayMapTypeId()" /> 지적편집도 정보 보기
+    <input type="checkbox" id="chkTerrain" onclick="setOverlayMapTypeId()" /> 지형정보 보기 
+    <input type="checkbox" id="chkTraffic" onclick="setOverlayMapTypeId()" /> 교통정보 보기       
+    <input type="checkbox" id="chkBicycle" onclick="setOverlayMapTypeId()" /> 자전거도로 정보 보기
+</p>
 
-        <!-- 자기 소개 -->
-        <section>
-          <!-- 소개 내용은 <p>와 </p> 사이의 부분을 수정하세요 -->
-          <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Provident repellendus debitis ipsam tempore quia ad. Ducimus sint vel porro eos debitis veniam quis, repellat odio neque, cum voluptate, natus doloremque!</p>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=발급받은 APP KEY를 사용하세요"></script>
+<script>
+var mapContainer = document.getElementById('map'), // 지도를 표시할 div 
+    mapOption = { 
+        center: new kakao.maps.LatLng(37.57319, 126.96658), // 지도의 중심좌표
+        level: 7 // 지도의 확대 레벨
+    };
 
-          <!-- sns 링크 부분 -->
-          <!-- href="" 부분의 링크와 내용을 수정하세요 -->
-          <ul id="sns">
-            <li>
-              <i class="fa fa-envelope" aria-hidden="true"></i>
-              <a href="mailto:your-email@example.com">your-email@example.com</a>              
-        </li>
-            <li>
-              <i class="fab fa-github" aria-hidden="true"></i>
-              <a href="https://github.com/gh-username">gh-username</a>              
-            </li>
-            <li>
-              <i class="fab fa-linkedin" aria-hidden="true"></i>
-              <a href="https://linkedin.com/linkedin-username">linkedin-username</a>
-            </li>
-            </ul>
-        </section>
-      </article>
+var map = new kakao.maps.Map(mapContainer, mapOption); // 지도를 생성합니다
 
-      <artile id="right">
-        <section>
-          <h2>경력(work)</h2>
-          <!-- 경력 내용 수정 -->
-            <dl>
-              <dt>회사 A : 2018 ~ 2020</dt>
-              <dd>회사에서 맡았던 업무</dd>
-              <dd>기타 사항</dd>
-            </dl>
-            <dl>
-              <dt>회사 B : 2020 ~ 2022</dt>
-              <dd>회사에서 맡았던 업무</dd>              
-            </dl>  
-        </section>
-        <section>
-          <h2>다룰 수 있는 기술(skills)</h2>
-          <!-- 자신있는 기술 수정 -->
-          <p>HTML/CSS</p>
-          <p>Javascritpt</p>
-          <p>React</p>
-          <p>Github</p>
-        </section>
-        <section>
-          <h2>학력(education)</h2>
-          <!-- 학력 수정 -->
-          <p>2018.02 - XX 대학교 졸업(전공: 컴퓨터공학)</p>
-          <p>2012.02 - XX 고등학교 졸업</p>
-          <p> ... </p>
-        </section>
-      </artile>
-    </main>
-  </div>
+// 지도 타입 정보를 가지고 있을 객체입니다
+// map.addOverlayMapTypeId 함수로 추가된 지도 타입은
+// 가장 나중에 추가된 지도 타입이 가장 앞에 표시됩니다
+// 이 예제에서는 지도 타입을 추가할 때 지적편집도, 지형정보, 교통정보, 자전거도로 정보 순으로 추가하므로
+// 자전거 도로 정보가 가장 앞에 표시됩니다
+var mapTypes = {
+    terrain : kakao.maps.MapTypeId.TERRAIN,    
+    traffic :  kakao.maps.MapTypeId.TRAFFIC,
+    bicycle : kakao.maps.MapTypeId.BICYCLE,
+    useDistrict : kakao.maps.MapTypeId.USE_DISTRICT
+};
+
+// 체크 박스를 선택하면 호출되는 함수입니다
+function setOverlayMapTypeId() {
+    var chkTerrain = document.getElementById('chkTerrain'),  
+        chkTraffic = document.getElementById('chkTraffic'),
+        chkBicycle = document.getElementById('chkBicycle'),
+        chkUseDistrict = document.getElementById('chkUseDistrict');
+    
+    // 지도 타입을 제거합니다
+    for (var type in mapTypes) {
+        map.removeOverlayMapTypeId(mapTypes[type]);    
+    }
+
+    // 지적편집도정보 체크박스가 체크되어있으면 지도에 지적편집도정보 지도타입을 추가합니다
+    if (chkUseDistrict.checked) {
+        map.addOverlayMapTypeId(mapTypes.useDistrict);    
+    }
+    
+    // 지형정보 체크박스가 체크되어있으면 지도에 지형정보 지도타입을 추가합니다
+    if (chkTerrain.checked) {
+        map.addOverlayMapTypeId(mapTypes.terrain);    
+    }
+    
+    // 교통정보 체크박스가 체크되어있으면 지도에 교통정보 지도타입을 추가합니다
+    if (chkTraffic.checked) {
+        map.addOverlayMapTypeId(mapTypes.traffic);    
+    }
+    
+    // 자전거도로정보 체크박스가 체크되어있으면 지도에 자전거도로정보 지도타입을 추가합니다
+    if (chkBicycle.checked) {
+        map.addOverlayMapTypeId(mapTypes.bicycle);    
+    }
+    
+}  
+</script>
 </body>
 </html>
