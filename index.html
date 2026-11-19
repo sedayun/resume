@@ -1,110 +1,171 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="java.sql.*" %>
+
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>경남정보대 및 인근 대학 지도 (마커 + 인포윈도우 + 클러스터러)</title>
-    <style>
-        html, body { margin: 0; padding: 0; height: 100%; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>게시글 리스트 및 지도</title>
+
+<style>
+table {
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+th, td {
+    border: 1px solid black;
+    padding: 5px 10px;
+}
+#map {
+    width: 100%;
+    height: 450px;
+    margin-top: 20px;
+    border: 1px solid #ccc;
+}
+</style>
 </head>
+
 <body>
-    <div id="map" style="width:100%;height:100vh;"></div>
 
-    <!-- clusterer 라이브러리 포함 -->
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e21559fa27072af635c69adf895294e4&libraries=clusterer"></script>
-    <script>
-    const LAT = 35.1468209;
-    const LNG = 129.0112424;
+<h2>게시글 리스트</h2>
 
-    var mapContainer = document.getElementById('map'), 
-        mapOption = { 
-            center: new kakao.maps.LatLng(LAT, LNG), // 지도의 중심좌표 (경남정보대)
-            level: 3 // 지도의 확대 레벨
-        };
+<table>
+<tr>
+    <th>번호</th>
+    <th>제목</th>
+    <th>작성자</th>
+    <th>날짜</th>
+    <th>이메일</th>
+</tr>
 
-    // 1. 지도 생성
-    var map = new kakao.maps.Map(mapContainer, mapOption); 
+<%
+String url = "jdbc:mysql://localhost:3306/jspdb?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8";
+String dbId = "root";
+String dbPw = "1234"; // ★ 본인의 실제 MySQL 비밀번호로 수정하세요
 
-    // 2. 첫 번째 코드 기능: 기본 파란 마커 및 클릭 시 인포윈도우
-    var mainMarkerPosition = new kakao.maps.LatLng(LAT, LNG); 
-    var mainMarker = new kakao.maps.Marker({
-        position: mainMarkerPosition
-    });
-    mainMarker.setMap(map);
+Connection conn = null;
+Statement stmt = null;
+ResultSet rs = null;
 
-    var iwContent = '<div style="padding:5px;"><a href="https://www.kit.ac.kr/" target="_blank">경남정보대학교 홈페이지</a></div>';
-    var infowindow = new kakao.maps.InfoWindow({
-        content : iwContent,
-        removable : true
-    });
+try {
+    Class.forName("com.mysql.cj.jdbc.Driver");
+    conn = DriverManager.getConnection(url, dbId, dbPw);
+    stmt = conn.createStatement();
 
-    kakao.maps.event.addListener(mainMarker, 'click', function() {
-        infowindow.open(map, mainMarker);
-    });
+    String sql = "SELECT * FROM board ORDER BY id DESC";
+    rs = stmt.executeQuery(sql);
 
-    // 3. 두 번째 & 세 번째 코드 기능: 여러 대학교 별 마커 + 마커 클러스터러
-    var positions = [
-        {
-            title: '경남정보대학교',
-            latlng: new kakao.maps.LatLng(LAT, LNG),
-            url: 'https://www.kit.ac.kr/'
-        },
-        {
-            title: '동서대학교',
-            latlng: new kakao.maps.LatLng(35.1461119, 129.0070218),
-            url: 'https://www.dongseo.ac.kr/'
-        },
-        {
-            title: '부산디지털대학교',
-            latlng: new kakao.maps.LatLng(35.1463906, 129.0095931),
-            url: 'https://www.bdu.ac.kr/'
-        },
-        {
-            title: '신라대학교',
-            latlng: new kakao.maps.LatLng(35.16792, 128.9970255),
-            url: 'https://www.silla.ac.kr/'
-        }
-    ];
-
-    var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
-
-    // 마커 클러스터러 생성 (지도 축소 시 레벨 10 이상부터 원형 숫자로 묶임)
-    var clusterer = new kakao.maps.MarkerClusterer({
-        map: map,
-        averageCenter: true,
-        minLevel: 10
-    });
-
-    var clusterMarkers = [];
-
-    for (var i = 0; i < positions.length; i++) {
-        var imageSize = new kakao.maps.Size(24, 35);
-        var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
-
-        var starMarker = new kakao.maps.Marker({
-            position: positions[i].latlng,
-            title: positions[i].title,
-            image: markerImage
-        });
-
-        // 각 별 마커에도 클릭 시 학교명과 링크 인포윈도우가 열리도록 연결
-        (function(marker, data) {
-            var subInfowindow = new kakao.maps.InfoWindow({
-                content: '<div style="padding:5px;"><b>' + data.title + '</b><br><a href="' + data.url + '" target="_blank">홈페이지 이동</a></div>',
-                removable: true
-            });
-
-            kakao.maps.event.addListener(marker, 'click', function() {
-                subInfowindow.open(map, marker);
-            });
-        })(starMarker, positions[i]);
-
-        clusterMarkers.push(starMarker);
+    while(rs.next()) {
+%>
+<tr>
+    <td><%= rs.getInt("id") %></td>
+    <td><%= rs.getString("title") %></td>
+    <td><%= rs.getString("writer") %></td>
+    <td><%= rs.getDate("regdate") %></td>
+    <td><%= rs.getString("email") %></td>
+</tr>
+<%
     }
+} catch(Exception e) {
+    out.println("오류 발생 : " + e.getMessage());
+} finally {
+    if(rs != null) try { rs.close(); } catch(Exception e) {}
+    if(stmt != null) try { stmt.close(); } catch(Exception e) {}
+    if(conn != null) try { conn.close(); } catch(Exception e) {}
+}
+%>
+</table>
 
-    // 클러스터러에 4개 대학 마커 일괄 등록
-    clusterer.addMarkers(clusterMarkers);
-    </script>
+<a href="write.jsp">게시글 쓰기</a>
+
+<hr>
+
+<h3>대학 위치 안내</h3>
+<div id="map"></div>
+
+<!-- clusterer 라이브러리 포함 -->
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e21559fa27072af635c69adf895294e4&libraries=clusterer"></script>
+<script>
+const LAT = 35.1468209;
+const LNG = 129.0112424;
+
+var mapContainer = document.getElementById('map'), 
+    mapOption = { 
+        center: new kakao.maps.LatLng(LAT, LNG), // 지도의 중심좌표
+        level: 3 // 지도의 확대 레벨
+    };
+
+// 지도를 생성합니다
+var map = new kakao.maps.Map(mapContainer, mapOption); 
+
+// 기본 마커 생성
+var mainMarkerPosition = new kakao.maps.LatLng(LAT, LNG); 
+var mainMarker = new kakao.maps.Marker({
+    position: mainMarkerPosition
+});
+mainMarker.setMap(map);
+
+// 인포윈도우 생성
+var iwContent = '<div style="padding:5px;"><a href="https://www.kit.ac.kr/" target="_blank">https://www.kit.ac.kr/</a></div>',
+    iwRemoveable = true;
+
+var infowindow = new kakao.maps.InfoWindow({
+    content : iwContent,
+    removable : iwRemoveable
+});
+
+// 기본 마커 클릭 이벤트 등록
+kakao.maps.event.addListener(mainMarker, 'click', function() {
+    infowindow.open(map, mainMarker);
+});
+
+// 여러 대학교 위치 배열
+var positions = [
+    {
+        title: '경남정보대학교',
+        latlng: new kakao.maps.LatLng(LAT, LNG)
+    },
+    {
+        title: '동서대학교',
+        latlng: new kakao.maps.LatLng(35.1461119, 129.0070218)
+    },
+    {
+        title: '부산디지털대학교',
+        latlng: new kakao.maps.LatLng(35.1463906, 129.0095931)
+    },
+    {
+        title: '신라대학교',
+        latlng: new kakao.maps.LatLng(35.16792, 128.9970255)
+    }
+];
+
+var imageSrc = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+
+// 마커 클러스터러 생성
+var clusterer = new kakao.maps.MarkerClusterer({
+    map: map,
+    averageCenter: true,
+    minLevel: 10
+});
+
+var clusterMarkers = [];
+
+for (var i = 0; i < positions.length; i++) {
+    var imageSize = new kakao.maps.Size(24, 35);
+    var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+
+    var starMarker = new kakao.maps.Marker({
+        position: positions[i].latlng,
+        title: positions[i].title,
+        image: markerImage
+    });
+    clusterMarkers.push(starMarker);
+}
+
+// 클러스터러에 마커 일괄 추가
+clusterer.addMarkers(clusterMarkers);
+</script>
+
 </body>
 </html>
